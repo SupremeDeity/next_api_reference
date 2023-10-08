@@ -4,7 +4,7 @@
 
 This project aims to generate an API Reference of [Route Handler] found in `NextJS 13`.
 
-Currently the aim is two provide atleast 2 generators:
+Currently the aim is to provide atleast 2 generators:
 
 - JSON
 - Static HTML reference
