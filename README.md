@@ -11,6 +11,17 @@ Currently the aim is two provide atleast 2 generators:
 
 The documentation will be updated as more work is done.
 
+```sh
+Usage: next_api_reference [OPTIONS] --output <OUTPUT>
+
+Options:
+  -v, --verbose              Enable verbose logging
+  -l, --location <LOCATION>  Location to find route handlers from [default: ./]
+  -o, --output <OUTPUT>      The output location
+  -h, --help                 Print help
+  -V, --version              Print version
+```
+
 ### Goals
 
 - [x] Basic JSON Generator
