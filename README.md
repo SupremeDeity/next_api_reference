@@ -2,7 +2,7 @@
 
 > NOTE: This crate is under development and in its very early stages. You may encounter bugs. Open up a issue or create a PR if you do.
 
-This crate aims to generate an API Reference of `Route Handlers` found in `NextJS 13`.
+This project aims to generate an API Reference of [Route Handler] found in `NextJS 13`.
 
 Currently the aim is two provide atleast 2 generators:
 
@@ -15,7 +15,10 @@ The documentation will be updated as more work is done.
 
 - [ ] Basic JSON Generator
 - [ ] Basic HTML Generator
-- [ ] Parse docstrings to add documentation to API endpoints.
+- [x] Parse comments to add documentation to API endpoints\*.
+- [x] Implement basic logging.
+
+> Block comments are parsed but they still need more testing and work. Comments for named exports like `export { GET }` are unsupported at the moment.
 
 ### Contributing
 
@@ -29,3 +32,5 @@ To contribute to the the project simply:
 4. Submit the PR
 
 A better workflow and guide will be created in the future if this project gains popularity.
+
+[Route Handler]: https://nextjs.org/docs/app/building-your-application/routing/route-handlers

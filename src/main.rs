@@ -1,9 +1,16 @@
-use std::time::Instant;
+use std::{time::Instant, vec};
 
+mod logger;
 mod parse;
 
 use clap::Parser as clapParse;
 use rust_search::SearchBuilder;
+use swc_common::comments::Comments;
+
+use crate::{
+    logger::{LogLevel, Logger},
+    parse::ParseResult,
+};
 
 #[derive(clapParse, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -20,7 +27,18 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    println!("Indexing {}", args.location);
+    // --- Logger INIT ---
+    let max_level = if args.verbose {
+        LogLevel::VERBOSE
+    } else {
+        LogLevel::INFO
+    };
+    let logger: Logger = Logger::new(max_level);
+    // --- Logger INIT end ---
+
+    println!();
+    logger.log(LogLevel::INFO, format!("Indexing {}", args.location));
+
     let indexing_start = Instant::now();
     let search: Vec<String> = SearchBuilder::default()
         .location(args.location)
@@ -34,26 +52,39 @@ fn main() {
 
     if args.verbose {
         for path in &search {
-            println!("Found path: {path}")
+            logger.log(LogLevel::VERBOSE, format!("Found path: {path}"));
         }
     }
 
-    println!(
-        "Indexing completed in {:?}, found {} files.",
-        indexing_duration,
-        { search.len() }
+    logger.log(
+        LogLevel::INFO,
+        format!(
+            "Indexing completed in {:?}, found {} files.",
+            indexing_duration,
+            { search.len() }
+        ),
     );
 
-    println!("Parsing...");
+    logger.log(LogLevel::INFO, "Parsing...");
     let parsing_start: Instant = Instant::now();
+    let mut parse_results: Vec<ParseResult> = vec![];
     for path in &search {
-        parse::parse(path);
-        if args.verbose {
-            println!("Parsed {}", path);
-        }
+        let parse_result: ParseResult = parse::parse(path);
+        parse_results.push(parse_result);
+        logger.log(LogLevel::VERBOSE, format!("Parsed {}", path))
     }
 
     let parsing_duration = parsing_start.elapsed();
 
-    println!("Parsing completed in {:?}", parsing_duration);
+    logger.log(
+        LogLevel::INFO,
+        format!("Parsing completed in {:?}", parsing_duration),
+    );
+
+    for result in parse_results {
+        logger.log(
+            LogLevel::INFO,
+            format!("{}: {:?}", result.path, result.method_metadata),
+        )
+    }
 }
