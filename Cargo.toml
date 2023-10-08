@@ -5,7 +5,7 @@ edition = "2021"
 description = "A NextJS 13 route handler api reference generator"
 repository = "https://github.com/SupremeDeity/next_api_reference/"
 license = "Apache-2.0"
-keywords = ["nextjs", "cli", "api", "generator", "route handler"]
+keywords = ["nextjs", "cli", "api", "generator", "route_handler"]
 categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
