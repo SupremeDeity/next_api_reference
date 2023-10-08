@@ -1,11 +1,10 @@
-use std::{time::Instant, vec};
+use std::{fs::File, io::Write, time::Instant, vec};
 
 mod logger;
 mod parse;
 
 use clap::Parser as clapParse;
 use rust_search::SearchBuilder;
-use swc_common::comments::Comments;
 
 use crate::{
     logger::{LogLevel, Logger},
@@ -14,18 +13,22 @@ use crate::{
 
 #[derive(clapParse, Debug)]
 #[command(author, version, about, long_about = None)]
-struct Args {
-    /// Enable verbose logging
+struct Cli {
+    /// Enable verbose logging.
     #[arg(short, long)]
     verbose: bool,
 
-    /// Location to run program.
+    /// Location to find route handlers from.
     #[arg(short, long, default_value_t = String::from("./"))]
     location: String,
+
+    /// The output location.
+    #[arg(short, long)]
+    output: String,
 }
 
 fn main() {
-    let args = Args::parse();
+    let args = Cli::parse();
 
     // --- Logger INIT ---
     let max_level = if args.verbose {
@@ -59,7 +62,7 @@ fn main() {
     logger.log(
         LogLevel::INFO,
         format!(
-            "Indexing completed in {:?}, found {} files.",
+            "Indexing completed in {:?}, found {} file(s).",
             indexing_duration,
             { search.len() }
         ),
@@ -81,10 +84,29 @@ fn main() {
         format!("Parsing completed in {:?}", parsing_duration),
     );
 
-    for result in parse_results {
-        logger.log(
-            LogLevel::INFO,
-            format!("{}: {:?}", result.path, result.method_metadata),
-        )
-    }
+    let generation_start: Instant = Instant::now();
+    let j = serde_json::to_string(&parse_results);
+    match j {
+        Ok(json) => {
+            let json_generator_result = json_generator(&args.output, json);
+            let generation_duration = generation_start.elapsed();
+            match json_generator_result {
+                Ok(_) => logger.log(
+                    LogLevel::INFO,
+                    format!("Wrote to {} in {:?}", args.output, generation_duration),
+                ),
+                Err(e) => logger.log(LogLevel::ERROR, format!("Error writing to file: {}", e)),
+            }
+        }
+        Err(err) => {
+            logger.log(LogLevel::ERROR, err.to_string());
+        }
+    };
+}
+
+fn json_generator(output_location: &String, json: String) -> std::io::Result<()> {
+    let mut file = File::create(output_location)?;
+    file.write(json.as_bytes())?;
+
+    Ok(())
 }

@@ -1,3 +1,4 @@
+use serde::Serialize;
 use std::path::Path;
 use swc_common::comments::{Comments, SingleThreadedComments};
 use swc_common::sync::Lrc;
@@ -72,7 +73,7 @@ impl Visit for ModuleExportTransform {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ParseResult {
     pub path: String,
     pub method_metadata: Vec<MethodMetadata>,
@@ -140,7 +141,7 @@ pub fn parse(path: &String) -> ParseResult {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct MethodMetadata {
     method_type: String,
     comment: Option<Vec<String>>,

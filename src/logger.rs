@@ -6,7 +6,7 @@ pub struct Logger {
 
 #[derive(PartialEq, PartialOrd)]
 pub enum LogLevel {
-    // ERROR,
+    ERROR,
     // WARNING,
     INFO,
     VERBOSE,
@@ -15,7 +15,7 @@ pub enum LogLevel {
 impl Display for LogLevel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let to_print = match *self {
-            // LogLevel::ERROR => "ERROR",
+            LogLevel::ERROR => "ERROR",
             // LogLevel::WARNING => "WARNING",
             LogLevel::INFO => "INFO",
             LogLevel::VERBOSE => "VERBOSE",

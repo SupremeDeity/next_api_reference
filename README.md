@@ -13,12 +13,53 @@ The documentation will be updated as more work is done.
 
 ### Goals
 
-- [ ] Basic JSON Generator
+- [x] Basic JSON Generator
 - [ ] Basic HTML Generator
 - [x] Parse comments to add documentation to API endpoints\*.
 - [x] Implement basic logging.
 
 > Block comments are parsed but they still need more testing and work. Comments for named exports like `export { GET }` are unsupported at the moment.
+
+### JSON Generator
+
+The JSON generator outputs your api reference to a JSON file. It is meant to be used in case you want to write your own api reference site. You can use the data generated from this generator and parse it to create a reference site that suites your need.
+
+#### Schema
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Schema for next_api_reference json generator",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "method_metadata": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "method_type": {
+              "type": "string"
+            },
+            "comment": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["method_type"]
+        }
+      }
+    },
+    "required": ["path", "method_metadata"]
+  }
+}
+```
 
 ### Contributing
 

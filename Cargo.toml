@@ -2,12 +2,19 @@
 name = "next_api_reference"
 version = "0.1.0"
 edition = "2021"
+description = "A NextJS 13 route handler api reference generator"
+repository = "https://github.com/SupremeDeity/next_api_reference/"
+license = "Apache-2.0"
+keywords = ["nextjs", "cli", "api", "generator", "route handler"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 clap = { version = "4.4.6", features = ["derive"] }
 rust_search = "2.1.0"
+serde = "1.0.188"
+serde_json = "1.0.107"
 swc_common = { version = "0.32.2", features = ["tty-emitter"] }
 swc_core = "0.83.41"
 swc_ecma_ast = {version = "0.109.2"}
