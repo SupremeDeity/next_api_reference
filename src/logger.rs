@@ -1,3 +1,4 @@
+use ansi_term::Color::{Blue, Green, Red};
 use std::fmt::Display;
 
 pub struct Logger {
@@ -31,7 +32,12 @@ impl Logger {
 
     pub fn log<S: AsRef<str>>(&self, level: LogLevel, msg: S) {
         if self.max_level >= level {
-            println!("[{level}]: {}", msg.as_ref())
+            let msg_output = match level {
+                LogLevel::ERROR => Red.bold().paint(level.to_string()),
+                LogLevel::INFO => Blue.bold().paint(level.to_string()),
+                LogLevel::VERBOSE => Green.bold().paint(level.to_string()),
+            };
+            println!("{} {}", msg_output, msg.as_ref())
         }
     }
 }

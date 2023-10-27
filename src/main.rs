@@ -1,5 +1,10 @@
-use std::{fs::File, io::Write, time::Instant, vec};
+use std::{
+    fs::{self},
+    path::Path,
+    time::Instant,
+};
 
+mod generators;
 mod logger;
 mod parse;
 
@@ -8,7 +13,7 @@ use rust_search::SearchBuilder;
 
 use crate::{
     logger::{LogLevel, Logger},
-    parse::ParseResult,
+    parse::{ParseResult, Parser},
 };
 
 #[derive(clapParse, Debug)]
@@ -22,9 +27,13 @@ struct Cli {
     #[arg(short, long, default_value_t = String::from("./"))]
     location: String,
 
-    /// The output location.
+    /// The directory to output to.
     #[arg(short, long)]
     output: String,
+
+    // Only use the json generator
+    #[arg(short, long)]
+    json: bool,
 }
 
 fn main() {
@@ -37,6 +46,9 @@ fn main() {
         LogLevel::INFO
     };
     let logger: Logger = Logger::new(max_level);
+    // Enable ANSI support for Windows 10 & above.
+    #[cfg(target_os = "windows")]
+    ansi_term::enable_ansi_support();
     // --- Logger INIT end ---
 
     println!();
@@ -44,7 +56,7 @@ fn main() {
 
     let indexing_start = Instant::now();
     let search: Vec<String> = SearchBuilder::default()
-        .location(args.location)
+        .location(&args.location)
         .search_input("route")
         .ext("(js|ts)")
         .strict()
@@ -71,8 +83,9 @@ fn main() {
     logger.log(LogLevel::INFO, "Parsing...");
     let parsing_start: Instant = Instant::now();
     let mut parse_results: Vec<ParseResult> = vec![];
+    let parser = Parser::new(args.location.to_owned());
     for path in &search {
-        let parse_result: ParseResult = parse::parse(path);
+        let parse_result: ParseResult = parser.parse(path);
         parse_results.push(parse_result);
         logger.log(LogLevel::VERBOSE, format!("Parsed {}", path))
     }
@@ -84,29 +97,59 @@ fn main() {
         format!("Parsing completed in {:?}", parsing_duration),
     );
 
-    let generation_start: Instant = Instant::now();
-    let j = serde_json::to_string(&parse_results);
-    match j {
-        Ok(json) => {
-            let json_generator_result = json_generator(&args.output, json);
-            let generation_duration = generation_start.elapsed();
-            match json_generator_result {
-                Ok(_) => logger.log(
+    let output_path = Path::new(&args.output);
+
+    if let Err(e) = fs::create_dir_all(&output_path) {
+        logger.log(LogLevel::ERROR, e.to_string());
+    }
+
+    if args.json {
+        let json_generation_start: Instant = Instant::now();
+        match generators::json_generator(output_path, parse_results) {
+            Ok(_) => {
+                let generation_duration = json_generation_start.elapsed();
+                logger.log(
                     LogLevel::INFO,
-                    format!("Wrote to {} in {:?}", args.output, generation_duration),
-                ),
-                Err(e) => logger.log(LogLevel::ERROR, format!("Error writing to file: {}", e)),
+                    format!(
+                        "Completed generating JSON at '{}' in {:?}",
+                        output_path.display(),
+                        generation_duration
+                    ),
+                )
             }
+            Err(e) => logger.log(
+                LogLevel::ERROR,
+                format!(
+                    "Error generating JSON at '{}': {}",
+                    output_path.display(),
+                    e
+                ),
+            ),
+        };
+
+        return;
+    }
+
+    let site_generation_start: Instant = Instant::now();
+    match generators::html_generator(output_path, parse_results) {
+        Ok(_) => {
+            let generation_duration = site_generation_start.elapsed();
+            logger.log(
+                LogLevel::INFO,
+                format!(
+                    "Completed generating site at '{}' in {:?}",
+                    output_path.display(),
+                    generation_duration
+                ),
+            )
         }
-        Err(err) => {
-            logger.log(LogLevel::ERROR, err.to_string());
-        }
+        Err(e) => logger.log(
+            LogLevel::ERROR,
+            format!(
+                "Error generating site at '{}': {}",
+                output_path.display(),
+                e
+            ),
+        ),
     };
-}
-
-fn json_generator(output_location: &String, json: String) -> std::io::Result<()> {
-    let mut file = File::create(output_location)?;
-    file.write(json.as_bytes())?;
-
-    Ok(())
 }

@@ -24,12 +24,11 @@ Options:
 
 ### Goals
 
-- [x] Basic JSON Generator
-- [ ] Basic HTML Generator
-- [x] Parse comments to add documentation to API endpoints\*.
+- [x] Basic JSON Generator.
+- [x] Basic HTML Generator.
+- [x] Parse comments to add documentation to API endpoints.
 - [x] Implement basic logging.
-
-> Block comments are parsed but they still need more testing and work. Comments for named exports like `export { GET }` are unsupported at the moment.
+- [ ] Better comment parsing.
 
 ### JSON Generator
 
@@ -71,6 +70,69 @@ The JSON generator outputs your api reference to a JSON file. It is meant to be 
   }
 }
 ```
+
+#### Sample output
+
+```json
+[
+  {
+    "path": "/api/items",
+    "method_metadata": [
+      {
+        "method_type": "GET",
+        "comment": ["Get a list of all items"]
+      },
+      {
+        "method_type": "POST",
+        "comment": ["Create an item"]
+      },
+      {
+        "method_type": "DELETE",
+        "comment": ["Delete an item or a list of items"]
+      }
+    ]
+  },
+  {
+    "path": "/api/items/count",
+    "method_metadata": [
+      {
+        "method_type": "GET",
+        "comment": ["Get a count of all items"]
+      }
+    ]
+  }
+]
+```
+
+### Docstring
+
+Docstring parsing is supported by this crate. However it is very crude at the moment.
+
+#### Supported patterns
+
+To create a docstring simply create a single line comment **above** the definition of the functon:
+
+```ts
+// This is a simple docstring
+export async function GET(request: Request) {}
+```
+
+Block comments, while supported work differently in the different generators. For the HTML generator, only the first line will be shown, as for the JSON generator the entire string is provided in raw form and **may** require some extra processing.
+
+> The behavior of block comments in the HTML generator **might** change in the future.
+
+#### Unsupported patterns
+
+Unfortunately docstring parsing for something like this is currently not supported and the docstring will simply be ignored:
+
+```ts
+// This is a simple docstring
+async function GET(request: Request) {}
+
+export { GET };
+```
+
+Block commen
 
 ### Contributing
 

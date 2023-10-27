@@ -8,7 +8,7 @@ use swc_common::{
     SourceMap,
 };
 use swc_ecma_ast::{ExportDecl, ExportNamedSpecifier, ModuleExportName};
-use swc_ecma_parser::{lexer::Lexer, Parser, StringInput, Syntax};
+use swc_ecma_parser::{lexer::Lexer, Parser as swc_parser, StringInput, Syntax};
 use swc_ecma_visit::*;
 
 #[derive(Debug)]
@@ -79,70 +79,79 @@ pub struct ParseResult {
     pub method_metadata: Vec<MethodMetadata>,
 }
 
-pub fn parse(path: &String) -> ParseResult {
-    // TODO: Cleanup this code
-    let cm: Lrc<SourceMap> = Default::default();
-    let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
+pub struct Parser {
+    parser_location: String,
+}
 
-    // Real usage
-    let fm = cm.load_file(Path::new(path)).expect("failed to load path");
-
-    let comments: SingleThreadedComments = SingleThreadedComments::default();
-
-    let lexer = Lexer::new(
-        Syntax::Typescript(Default::default()),
-        Default::default(),
-        StringInput::from(&*fm),
-        Some(&comments),
-    );
-
-    let mut parser = Parser::new_from(lexer);
-
-    for e in parser.take_errors() {
-        e.into_diagnostic(&handler).emit();
+impl Parser {
+    pub fn new(parser_location: String) -> Self {
+        Self { parser_location }
     }
+    pub fn parse(&self, path: &String) -> ParseResult {
+        // TODO: Cleanup this code
+        let cm: Lrc<SourceMap> = Default::default();
+        let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
 
-    let _module = parser
-        .parse_module()
-        .map_err(|e| {
-            // Unrecoverable fatal error occurred
-            e.into_diagnostic(&handler).emit()
-        })
-        .expect("failed to parser module");
+        // Real usage
+        let fm = cm.load_file(Path::new(path)).expect("failed to load path");
 
-    let mut module_export_transform: ModuleExportTransform = Default::default();
-    _module.visit_with(&mut module_export_transform);
+        let comments: SingleThreadedComments = SingleThreadedComments::default();
 
-    let mut method_metadata: Vec<MethodMetadata> = vec![];
-    for method in module_export_transform.http_methods {
-        let parsed_comments = if let Some(pos) = method.pos {
-            if let Some(vec_comments) = comments.get_leading(pos.lo) {
-                let mapped_comments: Vec<String> = vec_comments
-                    .into_iter()
-                    .map(|c| c.text.trim().to_string())
-                    .collect();
-                Some(mapped_comments)
+        let lexer = Lexer::new(
+            Syntax::Typescript(Default::default()),
+            Default::default(),
+            StringInput::from(&*fm),
+            Some(&comments),
+        );
+
+        let mut parser = swc_parser::new_from(lexer);
+
+        for e in parser.take_errors() {
+            e.into_diagnostic(&handler).emit();
+        }
+
+        let _module = parser
+            .parse_module()
+            .map_err(|e| {
+                // Unrecoverable fatal error occurred
+                e.into_diagnostic(&handler).emit()
+            })
+            .expect("failed to parser module");
+
+        let mut module_export_transform: ModuleExportTransform = Default::default();
+        _module.visit_with(&mut module_export_transform);
+
+        let mut method_metadata: Vec<MethodMetadata> = vec![];
+        for method in module_export_transform.http_methods {
+            let parsed_comments = if let Some(pos) = method.pos {
+                if let Some(vec_comments) = comments.get_leading(pos.lo) {
+                    let mapped_comments: Vec<String> = vec_comments
+                        .into_iter()
+                        .map(|c| c.text.trim().to_string())
+                        .collect();
+                    Some(mapped_comments)
+                } else {
+                    None
+                }
             } else {
                 None
-            }
-        } else {
-            None
-        };
+            };
 
-        method_metadata.push(MethodMetadata {
-            method_type: method.method_type,
-            comment: parsed_comments,
-        });
-    }
+            method_metadata.push(MethodMetadata {
+                method_type: method.method_type,
+                comment: parsed_comments,
+            });
+        }
 
-    ParseResult {
-        path: path.to_string(),
-        method_metadata,
+        ParseResult {
+            path: path[self.parser_location.len()..(path.len() - 9)].to_owned(),
+            method_metadata,
+        }
     }
 }
 
 #[derive(Debug, Serialize)]
 pub struct MethodMetadata {
-    method_type: String,
-    comment: Option<Vec<String>>,
+    pub method_type: String,
+    pub comment: Option<Vec<String>>,
 }
