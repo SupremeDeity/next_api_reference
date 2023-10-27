@@ -1,6 +1,6 @@
 [package]
 name = "next_api_reference"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "A NextJS 13 route handler api reference generator"
 repository = "https://github.com/SupremeDeity/next_api_reference/"
