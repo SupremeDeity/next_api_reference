@@ -132,8 +132,6 @@ async function GET(request: Request) {}
 export { GET };
 ```
 
-Block commen
-
 ### Contributing
 
 If you find a feature you need in this project that is lacking or a bug, check if a issue is already created for it, if not go ahead and create a issue.
