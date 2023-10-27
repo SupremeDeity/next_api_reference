@@ -2,7 +2,7 @@
 
 > NOTE: This crate is under development and in its very early stages. You may encounter bugs. Open up a issue or create a PR if you do.
 
-This project aims to generate an API Reference of [Route Handler] found in `NextJS 13`.
+This project aims to generate an API Reference of [Route Handler] found in `NextJS 13+`.
 
 Currently the aim is to provide atleast 2 generators:
 
@@ -17,7 +17,8 @@ Usage: next_api_reference [OPTIONS] --output <OUTPUT>
 Options:
   -v, --verbose              Enable verbose logging
   -l, --location <LOCATION>  Location to find route handlers from [default: ./]
-  -o, --output <OUTPUT>      The output location
+  -o, --output <OUTPUT>      The directory to output to
+  -j, --json
   -h, --help                 Print help
   -V, --version              Print version
 ```
@@ -30,9 +31,29 @@ Options:
 - [x] Implement basic logging.
 - [ ] Better comment parsing.
 
+### HTML Generator (default)
+
+The HTML generator is the default generator. It outputs a basic static site which can be changed as necessary.
+
+The generator **overrides** the files so make sure not to call it at the same location **if** you have made changes to the site.
+
+#### Example command
+
+```sh
+next_api_reference -v -l ./app -o ./output
+```
+
 ### JSON Generator
 
 The JSON generator outputs your api reference to a JSON file. It is meant to be used in case you want to write your own api reference site. You can use the data generated from this generator and parse it to create a reference site that suites your need.
+
+#### Example command
+
+```sh
+next_api_reference -l ./app -o ./output -j
+```
+
+> `-j` flag is necessary to use the JSON generator.
 
 #### Schema
 

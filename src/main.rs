@@ -31,7 +31,7 @@ struct Cli {
     #[arg(short, long)]
     output: String,
 
-    // Only use the json generator
+    /// Only use the json generator
     #[arg(short, long)]
     json: bool,
 }
